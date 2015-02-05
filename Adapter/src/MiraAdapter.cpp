@@ -69,33 +69,14 @@ void onNewOdometry(mira::ChannelRead<mira::Pose2> data)
 {
     geometry_msgs::Point msg;
     mira::Pose2 pose = data->value();
-    std::cout<<pose.x()<<" "<<pose.y()<<" "<<pose.phi()<<std::endl;
+
     msg.x = (float)pose.x();
     msg.y = (float)pose.y();
     msg.z = (float)pose.phi();
 
-    std::cout<<msg.x<<" "<<msg.y<<" "<<msg.z<<std::endl;
-    std::cout<<"--------------------------------------------------"<<std::endl;
-
     scitosOdometryPub.publish(msg);
 }
 
-/*
-void onDataForKuka1(mira::ChannelRead<std::string> data)
-{
-    std_msgs::String msg;
-    msg.data = data->value();
-    scitosToKuka1.publish(msg);
-}
-
-
-void onDataForKuka2(mira::ChannelRead<std::string> data)
-{
-    std_msgs::String msg;
-    msg.data = data->value();
-    scitosToKuka2.publish(msg);
-}
-*/
 
 //------------------------------------------------------------------------------
 // callbacks for sending messages to the Scitos
@@ -105,13 +86,6 @@ void callback1(const geometry_msgs::Point::ConstPtr& msg)
     rosToMira.post(mira::Pose2(msg->x, msg->y, msg->z));
 }
 
-/*
-void kuka2Callback(const std_msgs::String::ConstPtr& msg)
-{
-    std::string message(msg->data);
-    kuka2ToScitos.post(message);
-}
-*/
 
 int main(int argc, char **argv)
 {
@@ -131,29 +105,23 @@ int main(int argc, char **argv)
 	authority.checkin("/", "Ros2Mira");
     authority.start();
 	rosToMira = authority.publish<mira::Pose2>("rosToMira");
-	//kuka2ToScitos = authority.publish<std::string>("kuka2ToScitos");
 
     // subscribe to MIRA-Channel
     authority.subscribe<mira::Pose2>("/robot/Odometry", &onNewOdometry);
-    //authority.subscribe<std::string>("scitosToKuka2", &onDataForKuka2);
 
     //--------------------------------------------------------------------------
     // ROS nodes
     
     // publisher
     ros::NodeHandle pubNode1;
-    //ros::NodeHandle pubNode2;
     
     scitosOdometryPub = pubNode1.advertise<geometry_msgs::Point>("OdometryChannel", 1000);
-    //scitosToKuka2 = pubNode2.advertise<std_msgs::String>("scitosChatter2", 1000);
 
 	// subscriber
 	ros::NodeHandle node;
 	ros::NodeHandle subNode1;
-	//ros::NodeHandle subNode2;
 	
 	ros::Subscriber subscriber1 = subNode1.subscribe("PoseChannel", 1000, callback1);
-	//ros::Subscriber subscriber2 = subNode2.subscribe("kuka2Chatter", 1000, kuka2Callback);
 
 
 	// do the locomotion
