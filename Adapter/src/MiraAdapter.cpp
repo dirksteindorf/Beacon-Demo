@@ -48,9 +48,7 @@
 #include <ros/ros.h>
 #include <fw/Framework.h>
 #include <std_msgs/String.h>
-#include <std_msgs/MultiArrayLayout.h>
-#include <std_msgs/MultiArrayDimension.h>
-#include <std_msgs/Float64MultiArray.h>
+#include <geometry_msgs/Point.h>
 #include <transform/Pose.h>
 #include <fw/ChannelReadWrite.h>
 
@@ -58,7 +56,7 @@
 mira::Authority authority; 
 
 // ROS publisher
-//ros::Publisher scitosToKuka1;
+ros::Publisher scitosOdometryPub;
 
 // channels for publishing ROS messages to MIRA
 mira::Channel<mira::Pose2> rosToMira;
@@ -66,6 +64,22 @@ mira::Channel<mira::Pose2> rosToMira;
 
 //------------------------------------------------------------------------------
 // callbacks for sending messages to the Kuka robots
+
+void onNewOdometry(mira::ChannelRead<mira::Pose2> data)
+{
+    geometry_msgs::Point msg;
+    mira::Pose2 pose = data->value();
+    std::cout<<pose.x()<<" "<<pose.y()<<" "<<pose.phi()<<std::endl;
+    msg.x = (float)pose.x();
+    msg.y = (float)pose.y();
+    msg.z = (float)pose.phi();
+
+    std::cout<<msg.x<<" "<<msg.y<<" "<<msg.z<<std::endl;
+    std::cout<<"--------------------------------------------------"<<std::endl;
+
+    scitosOdometryPub.publish(msg);
+}
+
 /*
 void onDataForKuka1(mira::ChannelRead<std::string> data)
 {
@@ -85,10 +99,10 @@ void onDataForKuka2(mira::ChannelRead<std::string> data)
 
 //------------------------------------------------------------------------------
 // callbacks for sending messages to the Scitos
-void callback1(const std_msgs::Float64MultiArray::ConstPtr& msg)
+void callback1(const geometry_msgs::Point::ConstPtr& msg)
 {
     //std::string message(msg->data);
-    rosToMira.post(mira::Pose2(msg->data[0], msg->data[1], msg->data[2]));
+    rosToMira.post(mira::Pose2(msg->x, msg->y, msg->z));
 }
 
 /*
@@ -120,17 +134,17 @@ int main(int argc, char **argv)
 	//kuka2ToScitos = authority.publish<std::string>("kuka2ToScitos");
 
     // subscribe to MIRA-Channel
-    //authority.subscribe<std::string>("scitosToKuka1", &onDataForKuka1);
+    authority.subscribe<mira::Pose2>("/robot/Odometry", &onNewOdometry);
     //authority.subscribe<std::string>("scitosToKuka2", &onDataForKuka2);
 
     //--------------------------------------------------------------------------
     // ROS nodes
     
     // publisher
-    //ros::NodeHandle pubNode1;
+    ros::NodeHandle pubNode1;
     //ros::NodeHandle pubNode2;
     
-    //scitosToKuka1 = pubNode1.advertise<std_msgs::String>("scitosChatter1", 1000);
+    scitosOdometryPub = pubNode1.advertise<geometry_msgs::Point>("OdometryChannel", 1000);
     //scitosToKuka2 = pubNode2.advertise<std_msgs::String>("scitosChatter2", 1000);
 
 	// subscriber
