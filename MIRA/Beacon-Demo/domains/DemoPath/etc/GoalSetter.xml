@@ -1,7 +1,7 @@
 <root>
 
-	<unit id="GoalSetter" class="demopath::GoalSetter">
-		<!-- add your default parameters here-->
-	</unit>
+    <include file="${findpkg SCITOSConfigs}/etc/SCITOS-Pilot.xml"/>
+    
+	<unit id="GoalSetter" class="demopath::GoalSetter" />
 
 </root>
