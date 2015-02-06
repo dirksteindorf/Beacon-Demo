@@ -57,6 +57,7 @@ mira::Authority authority;
 
 // ROS publisher
 ros::Publisher scitosOdometryPub;
+ros::Publisher goalReached;
 
 // channels for publishing ROS messages to MIRA
 mira::Channel<mira::Pose2> rosToMira;
@@ -77,12 +78,21 @@ void onNewOdometry(mira::ChannelRead<mira::Pose2> data)
     scitosOdometryPub.publish(msg);
 }
 
+void onGoalReached(mira::ChannelRead<std::string> data)
+{
+    if(data->value() == "GoalReached")
+    {
+        goalReached.publish(data->value());
+    }
+}
+
 
 //------------------------------------------------------------------------------
 // callbacks for sending messages to the Scitos
 void callback1(const geometry_msgs::Point::ConstPtr& msg)
 {
     //std::string message(msg->data);
+    std::cout<<msg->x<<" "<<msg->y<<" "<<msg->z<<std::endl;
     rosToMira.post(mira::Pose2(msg->x, msg->y, msg->z));
 }
 
@@ -108,14 +118,18 @@ int main(int argc, char **argv)
 
     // subscribe to MIRA-Channel
     authority.subscribe<mira::Pose2>("/robot/Odometry", &onNewOdometry);
+    authority.subscribe<std::string>("/navigation/PilotEvent", &onGoalReached);
 
     //--------------------------------------------------------------------------
     // ROS nodes
     
     // publisher
     ros::NodeHandle pubNode1;
+    ros::NodeHandle pubNode2;
     
     scitosOdometryPub = pubNode1.advertise<geometry_msgs::Point>("OdometryChannel", 1000);
+    goalReached = pubNode2.advertise<std_msgs::String>("PilotEvent", 1000);
+
 
 	// subscriber
 	ros::NodeHandle node;
