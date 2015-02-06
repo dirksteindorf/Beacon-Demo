@@ -6,7 +6,7 @@ from geometry_msgs.msg import Point
 # dummy values
 pose_x   = [1.0, 2.0,  3.0]
 pose_y   = [1.0, 2.0,  3.0]
-pose_phi = [0.0, 90.0, 270.0]
+pose_phi = [0.0, 0.0, 0.0]
 
 index = 0
 
@@ -18,7 +18,7 @@ def talker():
     
     pub = rospy.Publisher('PoseChannel', Point, queue_size=10)
     rospy.init_node('talker', anonymous=True)
-    rate = rospy.Rate(10) 
+    rate = rospy.Rate(0.1) 
     
     while not rospy.is_shutdown():
         # built message with dummy values
